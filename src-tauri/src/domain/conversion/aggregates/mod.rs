@@ -1,0 +1,1 @@
+// Conversion aggregates - consistency boundaries
