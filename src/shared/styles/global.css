@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+@import './themes/light.css';
+@import './themes/dark.css';
+
+@theme {
+  --color-primary: var(--theme-primary);
+  --color-surface-tint: var(--theme-surface-tint);
+  --color-on-primary: var(--theme-on-primary);
+  --color-primary-container: var(--theme-primary-container);
+  --color-on-primary-container: var(--theme-on-primary-container);
+  --color-secondary: var(--theme-secondary);
+  --color-on-secondary: var(--theme-on-secondary);
+  --color-secondary-container: var(--theme-secondary-container);
+  --color-on-secondary-container: var(--theme-on-secondary-container);
+  --color-tertiary: var(--theme-tertiary);
+  --color-on-tertiary: var(--theme-on-tertiary);
+  --color-tertiary-container: var(--theme-tertiary-container);
+  --color-on-tertiary-container: var(--theme-on-tertiary-container);
+  --color-error: var(--theme-error);
+  --color-on-error: var(--theme-on-error);
+  --color-error-container: var(--theme-error-container);
+  --color-on-error-container: var(--theme-on-error-container);
+  --color-background: var(--theme-background);
+  --color-on-background: var(--theme-on-background);
+  --color-surface: var(--theme-surface);
+  --color-on-surface: var(--theme-on-surface);
+  --color-surface-variant: var(--theme-surface-variant);
+  --color-on-surface-variant: var(--theme-on-surface-variant);
+  --color-outline: var(--theme-outline);
+  --color-outline-variant: var(--theme-outline-variant);
+  --color-shadow: var(--theme-shadow);
+  --color-scrim: var(--theme-scrim);
+  --color-inverse-surface: var(--theme-inverse-surface);
+  --color-inverse-on-surface: var(--theme-inverse-on-surface);
+  --color-inverse-primary: var(--theme-inverse-primary);
+  --color-primary-fixed: var(--theme-primary-fixed);
+  --color-on-primary-fixed: var(--theme-on-primary-fixed);
+  --color-primary-fixed-dim: var(--theme-primary-fixed-dim);
+  --color-on-primary-fixed-variant: var(--theme-on-primary-fixed-variant);
+  --color-secondary-fixed: var(--theme-secondary-fixed);
+  --color-on-secondary-fixed: var(--theme-on-secondary-fixed);
+  --color-secondary-fixed-dim: var(--theme-secondary-fixed-dim);
+  --color-on-secondary-fixed-variant: var(--theme-on-secondary-fixed-variant);
+  --color-tertiary-fixed: var(--theme-tertiary-fixed);
+  --color-on-tertiary-fixed: var(--theme-on-tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--theme-tertiary-fixed-dim);
+  --color-on-tertiary-fixed-variant: var(--theme-on-tertiary-fixed-variant);
+  --color-surface-dim: var(--theme-surface-dim);
+  --color-surface-bright: var(--theme-surface-bright);
+  --color-surface-container-lowest: var(--theme-surface-container-lowest);
+  --color-surface-container-low: var(--theme-surface-container-low);
+  --color-surface-container: var(--theme-surface-container);
+  --color-surface-container-high: var(--theme-surface-container-high);
+  --color-surface-container-highest: var(--theme-surface-container-highest);
+}
+
+html,
+body {
+  overflow: hidden;
+}
+
+body {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.typography-title {
+  font-size: clamp(1.8rem, 1.1rem + 2vw, 2.6rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.typography-subtitle {
+  font-size: clamp(1.3rem, 1rem + 1.1vw, 1.8rem);
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+}
+
+.typography-body {
+  font-size: clamp(0.95rem, 0.9rem + 0.35vw, 1.15rem);
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--color-on-surface);
+}
+
+.typography-body-small {
+  font-size: clamp(0.8rem, 0.78rem + 0.25vw, 0.95rem);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--color-on-surface-variant);
+}
+
+.typography-meta {
+  font-size: clamp(0.7rem, 0.68rem + 0.2vw, 0.85rem);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--color-on-surface-variant);
+}
