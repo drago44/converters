@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { routes } from 'vue-router/auto-routes';
+import { createRouter, createWebHistory } from 'vue-router'
+import { routes } from 'vue-router/auto-routes'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,6 +10,6 @@ const router = createRouter({
       redirect: '/image-converter/',
     },
   ],
-});
+})
 
-export default router;
+export default router

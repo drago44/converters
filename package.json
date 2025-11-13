@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint:js": "prettier --write \"src/**/*.{js,ts,vue}\"",
+    "lint:rs": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "lint": "yarn lint:js && yarn lint:rs"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
