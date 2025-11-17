@@ -1,0 +1,1 @@
+export { closeSplashScreen } from './lifecycle';

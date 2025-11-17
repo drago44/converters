@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loading...</title>
+    <style>
+      :root {
+        --splash-bg-from: rgb(58 96 143);
+        --splash-bg-to: rgb(108 86 119);
+        --splash-text: rgb(255 255 255);
+        --splash-primary: rgb(163 201 254);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --splash-bg-from: rgb(31 72 118);
+          --splash-bg-to: rgb(84 63 94);
+          --splash-primary: rgb(163 201 254);
+        }
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--splash-bg-from) 0%, var(--splash-bg-to) 100%);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        overflow: hidden;
+      }
+
+      .splash {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .splash__logo {
+        width: 100px;
+        height: 100px;
+        animation: fadeIn 1s ease-in;
+      }
+
+      .splash__title {
+        color: var(--splash-text);
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        animation: fadeIn 1s ease-in;
+      }
+
+      .splash__loader {
+        width: 150px;
+        height: 150px;
+      }
+
+      .splash__loader circle {
+        fill: var(--splash-primary);
+      }
+
+      .splash__text {
+        color: var(--splash-text);
+        font-size: 0.85rem;
+        margin-top: 1rem;
+        font-weight: 500;
+        animation: fadeIn 1.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="splash">
+      <img src="/tauri.svg" alt="App Logo" class="splash__logo" />
+      <h1 class="splash__title">Drago Forge</h1>
+      <div class="splash__loader" id="spiral"></div>
+      <p class="splash__text">Loading...</p>
+    </div>
+
+    <script>
+      // Fibonacci spiral loader with pulsing animation
+      function createSpiralLoader() {
+        const config = {
+          totalPoints: 250,
+          viewportSize: 150,
+          pointRadius: 1.2,
+          edgePadding: 2,
+          cycleDuration: 3,
+        }
+
+        // Golden ratio constant: φ = (1 + √5) / 2 ≈ 1.618
+        // Golden angle derived from: 360° / φ² ≈ 137.5°
+        const goldenRatio = (1 + Math.sqrt(5)) / 2
+        const rotationAngle = (2 * Math.PI) / (goldenRatio * goldenRatio)
+
+        const centerPoint = config.viewportSize / 2
+        const maxDistance = centerPoint - config.edgePadding - config.pointRadius
+
+        const container = document.getElementById('spiral')
+        const svgElement = createSVGCanvas(config.viewportSize)
+        container.appendChild(svgElement)
+
+        // Generate spiral pattern using Fibonacci distribution
+        for (let index = 0; index < config.totalPoints; index++) {
+          const position = calculateSpiralPosition(
+            index,
+            config.totalPoints,
+            rotationAngle,
+            centerPoint,
+            maxDistance,
+          )
+
+          const dot = createPulsingDot(
+            position,
+            config.pointRadius,
+            config.cycleDuration,
+            index / config.totalPoints,
+          )
+
+          svgElement.appendChild(dot)
+        }
+      }
+
+      function createSVGCanvas(size) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        svg.setAttribute('width', size)
+        svg.setAttribute('height', size)
+        svg.setAttribute('viewBox', `0 0 ${size} ${size}`)
+        return svg
+      }
+
+      function calculateSpiralPosition(index, total, angle, center, maxRadius) {
+        // Offset by 0.5 to avoid center clustering
+        const adjustedIndex = index + 0.5
+        const normalizedPosition = adjustedIndex / total
+
+        // Square root creates even spacing in polar coordinates
+        const distance = Math.sqrt(normalizedPosition) * maxRadius
+        const rotation = adjustedIndex * angle
+
+        return {
+          x: center + distance * Math.cos(rotation),
+          y: center + distance * Math.sin(rotation),
+          progress: normalizedPosition,
+        }
+      }
+
+      function createPulsingDot(position, baseRadius, duration, delay) {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        circle.setAttribute('cx', position.x)
+        circle.setAttribute('cy', position.y)
+        circle.setAttribute('r', baseRadius)
+
+        // Radius expansion animation
+        const sizeAnimation = createAnimation(
+          'r',
+          [baseRadius * 0.6, baseRadius * 2, baseRadius * 0.6],
+          duration,
+          delay,
+        )
+        circle.appendChild(sizeAnimation)
+
+        // Opacity fade animation
+        const fadeAnimation = createAnimation('opacity', [0.3, 1, 0.3], duration, delay)
+        circle.appendChild(fadeAnimation)
+
+        return circle
+      }
+
+      function createAnimation(attribute, keyframes, duration, delayFraction) {
+        const anim = document.createElementNS('http://www.w3.org/2000/svg', 'animate')
+        anim.setAttribute('attributeName', attribute)
+        anim.setAttribute('values', keyframes.join(';'))
+        anim.setAttribute('dur', `${duration}s`)
+        anim.setAttribute('begin', `${delayFraction * duration}s`)
+        anim.setAttribute('repeatCount', 'indefinite')
+        anim.setAttribute('calcMode', 'spline')
+        anim.setAttribute('keySplines', '0.4 0 0.6 1;0.4 0 0.6 1')
+        return anim
+      }
+
+      // Initialize on load
+      createSpiralLoader()
+    </script>
+  </body>
+</html>

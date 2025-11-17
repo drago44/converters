@@ -1,11 +1,11 @@
 // Inbound Adapters - Entry points (Driving adapters)
 //
 // Implementations that handle external requests:
-// - Tauri commands
+// - Tauri commands (organized by domain)
 // - API handlers
 // - Event listeners
 
-pub mod tauri;
+pub mod commands;
 
-// Re-export Tauri commands for easy access
-pub use tauri::greet;
+// Re-export commands for easy registration
+pub use commands::close_splashscreen;
