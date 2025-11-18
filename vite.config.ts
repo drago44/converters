@@ -16,6 +16,7 @@ export default defineConfig(async () => ({
     VueRouter({
       routesFolder: 'src/pages',
       exclude: ['**/model/**', '**/api/**', '**/lib/**', '**/config/**'],
+      importMode: 'async',
     }),
     vue(),
   ],

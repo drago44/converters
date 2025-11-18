@@ -4,11 +4,11 @@ import { routes } from 'vue-router/auto-routes'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    ...routes,
     {
       path: '/',
-      redirect: '/image-converter/',
+      redirect: '/image-converter',
     },
+    ...routes,
   ],
 })
 

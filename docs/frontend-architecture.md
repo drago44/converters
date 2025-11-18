@@ -2,10 +2,9 @@
 
 ## Methodology
 
-**FSD (Feature-Sliced Design) + CQRS (Command Query Responsibility Segregation)**
+**FSD (Feature-Sliced Design)**
 
-- FSD — code organization by layers with clear dependency rules
-- CQRS — separation of READ (queries) and WRITE (commands) operations
+FSD is a methodology for organizing frontend code by layers with clear dependency rules. This ensures maintainability, scalability, and predictable code structure.
 
 ## Project Structure
 
@@ -38,26 +37,24 @@ src/
 │       ├── model/          # Widget logic
 │       └── index.ts
 │
-├── features/               # 🟢 Business functionality + CQRS
+├── features/               # 🟢 Business functionality
 │   └── [feature-name]/
-│       ├── queries/        # ✅ READ operations (status, data)
-│       ├── commands/       # ✅ WRITE operations (actions, mutations)
-│       ├── model/          # Types, state, logic
-│       │   ├── types.ts
+│       ├── lib/            # Pure functions, types, constants
+│       ├── model/          # Store, state, side effects
 │       │   ├── store.ts
-│       │   └── constants.ts
-│       ├── ui/             # UI components for feature
+│       │   └── persistence.ts
+│       ├── ui/             # UI components
+│       ├── api/            # Tauri/HTTP calls (optional)
 │       └── index.ts        # Public API
 │
-├── entities/               # 🟡 Domain entities + CQRS
+├── entities/               # 🟡 Domain entities
 │   └── [entity-name]/
-│       ├── queries/        # ✅ READ (get, list, search)
-│       ├── commands/       # ✅ WRITE (create, update, delete)
-│       ├── model/          # Types, schema, validation
+│       ├── api/            # Backend communication
+│       ├── model/          # Types, schema, store
 │       │   ├── types.ts
 │       │   ├── schema.ts
 │       │   └── store.ts
-│       ├── ui/             # UI for entity (Card, Avatar)
+│       ├── ui/             # UI components (Card, Avatar)
 │       └── index.ts        # Public API
 │
 └── shared/                 # ⚪ Shared code
@@ -86,23 +83,20 @@ src/
 **What:** Reusable code without business logic coupling
 **Contains:** UI-kit, utilities, API clients, types
 **Imports:** Only from other shared modules
-**CQRS:** ❌ No
 
 ### 2. 🟡 Entities — Domain entities
 
-**What:** CRUD operations for business entities
+**What:** Business entities with CRUD operations
 **Examples:** User, File, Project, Document
-**Contains:** queries (read), commands (write), model, ui
+**Contains:** api, model, ui, lib
 **Imports:** shared, other entities (carefully)
-**CQRS:** ✅ Yes (queries/ + commands/)
 
 ### 3. 🟢 Features — Business functionality
 
 **What:** User scenarios and actions
-**Examples:** Auth, FileUpload, Search, Notifications
-**Contains:** queries (read), commands (write), model, ui
+**Examples:** Auth, FileUpload, Search, Notifications, Theme
+**Contains:** lib, model, ui, api (optional)
 **Imports:** entities, shared
-**CQRS:** ✅ Yes (queries/ + commands/)
 
 ### 4. 🟠 Widgets — Large UI blocks
 
@@ -110,7 +104,6 @@ src/
 **Examples:** Header, Sidebar, Dashboard, UserProfile
 **Contains:** ui, model
 **Imports:** features, entities, shared
-**CQRS:** ❌ No (uses queries/commands from features)
 
 ### 5. 🔴 Pages — Pages
 
@@ -118,7 +111,6 @@ src/
 **Examples:** HomePage, SettingsPage, ProfilePage
 **Contains:** ui, model
 **Imports:** widgets, features, entities, shared
-**CQRS:** ❌ No (uses queries/commands from features)
 
 ### 6. 🟣 Processes — Orchestration (optional)
 
@@ -126,14 +118,12 @@ src/
 **Examples:** Onboarding, Checkout, MultiStepWizard
 **Contains:** model, ui
 **Imports:** features, shared
-**CQRS:** ❌ No (orchestrates features)
 
 ### 7. 🔵 App — Initialization
 
 **What:** Entry point, providers, routing
 **Contains:** App.vue, providers, config, router
 **Imports:** All lower layers
-**CQRS:** ❌ No
 
 ## Dependency Rules
 
@@ -154,78 +144,249 @@ shared      →  only shared
 - ❌ Imports from higher to lower layers
 - ❌ Circular dependencies
 
-## CQRS Structure
-
-### Where used
-
-✅ **Entities** — CRUD operations
-✅ **Features** — Business logic
-
-❌ **App, Pages, Widgets, Processes, Shared** — NOT used
-
-### Queries (READ)
-
-**Purpose:** Read data
-**Properties:**
-- Don't change state
-- Cacheable
-- Auto-execute (via watch)
-- Readonly results
-
-**Examples:**
-- `entities/user/queries/useUser.ts` — get user
-- `features/auth/queries/useAuthStatus.ts` — auth status
-
-### Commands (WRITE)
-
-**Purpose:** Change data
-**Properties:**
-- Change state
-- Side-effects
-- Manual execution
-- Invalidate cache
-
-**Examples:**
-- `entities/user/commands/useCreateUser.ts` — create user
-- `features/auth/commands/useLogin.ts` — login
-
 ## Slice Segments
 
-### Segment
-Folder inside slice for code organization.
+### What is a Segment?
 
-**Standard segments:**
-- `ui/` — UI components
-- `model/` — types, state, logic
-- `api/` — API requests (only for entities/features)
-- `queries/` — read operations (CQRS)
-- `commands/` — write operations (CQRS)
-- `lib/` — utilities inside slice
-- `config/` — slice configuration
+Segment is a folder inside a slice that organizes code by **technical purpose** (the WHY), not by essence (the WHAT).
+
+**Core principle:** Segment names MUST describe purpose, NOT type.
+
+---
+
+### Standard Segments
+
+#### 1. `ui/` — User Interface
+
+**Purpose:** Everything related to visual presentation
+
+**Contains:**
+- Vue components (`.vue` files)
+- Component-specific styles
+- Visual presentation logic
+
+**When to use:** Always for components that render UI
+
+**Available in:** All layers
+
+**Examples:**
+```
+features/auth/ui/LoginForm.vue
+entities/user/ui/UserCard.vue
+shared/ui/Button/Button.vue
+```
+
+---
+
+#### 2. `model/` — Business Logic & State
+
+**Purpose:** Data structures, state management, business logic
+
+**Contains:**
+- Types and interfaces
+- Schemas and validation
+- Stores (Pinia)
+- Business logic functions
+- Stateful logic (observers, persistence, DOM manipulation)
+
+**When to use:**
+- Types for business entities
+- State management
+- Side effects (localStorage, DOM, timers)
+
+**Available in:** All layers except `app/`
+
+**Examples:**
+```
+features/theme/model/
+  ├── store.ts           — Pinia store
+  ├── persistence.ts     — localStorage logic
+  ├── dom.ts            — DOM manipulation
+  └── observers/        — MediaQuery, timers
+```
+
+**Key insight:** `model/` contains stateful logic with side effects
+
+---
+
+#### 3. `lib/` — Utilities
+
+**Purpose:** Pure helper functions and constants specific to this slice
+
+**Contains:**
+- Pure functions (no side effects)
+- Slice-specific utilities
+- Type definitions
+- Constants and enums
+
+**When to use:**
+- Pure calculations and transformations
+- Feature-specific utilities
+
+**Available in:** All layers
+
+**Critical distinction:**
+- `features/[name]/lib/` — Feature-specific logic
+- `shared/lib/` — Generic, reusable utilities
+
+**Examples:**
+```
+features/theme/lib/
+  ├── types.ts          — ThemeMode, ThemeVariant types
+  ├── constants.ts      — THEME_MODES, THEME_VARIANTS
+  └── utils.ts          — resolveThemeVariant, getNextThemeMode
+
+shared/lib/
+  ├── formatters/formatDate.ts — Generic date formatter
+  └── validators/email.ts      — Email validator
+```
+
+---
+
+#### 4. `api/` — Backend Communication
+
+**Purpose:** Communication with backend or external services
+
+**Contains:**
+- Request functions (HTTP, Tauri invoke)
+- DTOs (Data Transfer Objects)
+- Response mappers
+- API client configurations
+
+**When to use:**
+- Backend API calls
+- Tauri command wrappers
+
+**Available in:** `entities/`, `features/`, `shared/` ONLY
+
+**Examples:**
+```
+shared/api/
+  ├── window/
+  │   ├── lifecycle.ts  — closeSplashScreen()
+  │   └── index.ts      — Re-export
+  └── http/
+      └── client.ts     — Axios instance
+```
+
+---
+
+#### 5. `config/` — Configuration
+
+**Purpose:** Configuration files and constants
+
+**Contains:**
+- Feature flags
+- Slice-specific constants
+- Configuration objects
+
+**When to use:** Configuration that doesn't fit in `lib/`
+
+**Available in:** All layers
+
+---
+
+### Forbidden Segment Names
+
+**Never use these names** (they describe WHAT, not WHY):
+
+| ❌ Forbidden | ✅ Use instead |
+|-------------|---------------|
+| `components/` | `ui/` |
+| `hooks/` | `model/` (for composables) or `lib/` (for utilities) |
+| `types/` | `model/` or `lib/` |
+| `utils/` | `lib/` |
+| `helpers/` | `lib/` |
+| `composables/` | `model/` (for stateful) or `lib/` (for pure functions) |
+
+---
+
+### Segments by Layer
+
+| Layer | Allowed Segments |
+|-------|-----------------|
+| `app/` | No slices, only `providers/`, `config/`, `router/` |
+| `pages/` | `ui/`, `model/` |
+| `widgets/` | `ui/`, `model/` |
+| `features/` | `model/`, `ui/`, `lib/`, `api/` (optional), `config/` (optional) |
+| `entities/` | `model/`, `ui/`, `api/`, `lib/`, `config/` (optional) |
+| `shared/` | No slices, only `api/`, `config/`, `lib/`, `ui/` |
+
+---
+
+### Segment Decision Tree
+
+Use this decision tree to determine which segment to use:
+
+```
+What are you adding?
+│
+├─ Is it a UI component?
+│  └─→ ui/
+│
+├─ Is it backend communication?
+│  ├─ HTTP/Tauri invoke? → api/
+│  └─ Only in: entities/, features/, shared/
+│
+├─ Is it state or business logic?
+│  ├─ Has side effects? (store, DOM, localStorage, timers)
+│  │  └─→ model/
+│  ├─ Pure function/constant?
+│  │  ├─ Feature-specific? → features/[name]/lib/
+│  │  └─ Generic utility? → shared/lib/
+│  └─ Types?
+│     ├─ Business entity? → model/types.ts
+│     ├─ API DTO? → api/types.ts
+│     └─ Feature-specific? → lib/types.ts
+│
+└─ Is it configuration?
+   └─→ config/
+```
+
+**Quick reference:**
+
+| Question | Answer → Segment |
+|----------|-----------------|
+| Renders UI? | `ui/` |
+| Calls backend? | `api/` (entities/features/shared only) |
+| Has side effects? | `model/` |
+| Pure function? | `lib/` (feature-specific) or `shared/lib/` (generic) |
+| Configuration? | `config/` |
+
+**Common mistakes:**
+
+| Mistake | Correct placement |
+|---------|------------------|
+| Theme constants in `shared/lib/` | `features/theme/lib/constants.ts` |
+| `formatDate()` in `features/[x]/lib/` | `shared/lib/formatters/formatDate.ts` |
+| Store in `lib/` | `model/store.ts` |
+| Types in separate `types/` folder | Colocate with usage (`model/`, `lib/`, `api/`) |
+
+---
 
 ### Entities structure
 
 ```
 entities/[entity-name]/
-  queries/              ← READ operations
-  commands/             ← WRITE operations
-  model/                ← Types, schema, store
+  api/                  ← Backend communication (Tauri invoke, HTTP)
+  model/                ← Types, schema, store, business logic
   ui/                   ← UI components (Card, Avatar)
+  lib/                  ← Pure utilities (optional)
   index.ts              ← Public API
-  README.md             ← Documentation
+  README.md             ← Documentation (optional)
 ```
 
 ### Features structure
 
 ```
 features/[feature-name]/
-  queries/              ← READ operations
-  commands/             ← WRITE operations
-  model/                ← Types, state, logic
-  ui/                   ← UI components for feature
-  lib/                  ← Local utilities (optional)
+  lib/                  ← Pure functions, types, constants
+  model/                ← Store, state, side effects
+  ui/                   ← UI components
+  api/                  ← Tauri/HTTP calls (optional)
+  config/               ← Configuration (optional)
   index.ts              ← Public API
-  README.md             ← Documentation
+  README.md             ← Documentation (optional)
 ```
 
 ### Pages structure
@@ -256,18 +417,26 @@ Each slice exports only what's necessary via `index.ts`.
 
 **Entities:**
 ```ts
-export { useUser, useUsers } from './queries'
-export { useCreateUser, useUpdateUser } from './commands'
+// Export API functions
+export { getUser, getUsers, createUser, updateUser } from './api'
+
+// Export UI components
 export { default as UserCard } from './ui/UserCard.vue'
+
+// Export types
 export type { User, CreateUserData } from './model/types'
 ```
 
 **Features:**
 ```ts
-export { useAuthStatus } from './queries'
-export { useLogin, useLogout } from './commands'
-export { default as LoginForm } from './ui/LoginForm.vue'
-export type { LoginCredentials } from './model/types'
+// Export store (if using Pinia)
+export { useThemeStore } from './model/store'
+
+// Export UI components
+export { default as ThemeToggle } from './ui/ThemeToggle.vue'
+
+// Export types
+export type { ThemeMode, ThemeVariant } from './lib/types'
 ```
 
 ## Path aliases
@@ -293,51 +462,78 @@ export type { LoginCredentials } from './model/types'
 ### User Management
 
 ```
-entities/user/              # User CRUD
-  queries/useUser.ts        # GET user
-  commands/useCreateUser.ts # POST user
+entities/user/              # User entity
+  api/
+    getUser.ts              # GET /users/:id
+    getUsers.ts             # GET /users
+    createUser.ts           # POST /users
+  model/
+    types.ts                # User type
+    store.ts                # User state
+  ui/
+    UserCard.vue            # User card component
 
 features/user-profile/      # Profile editing
-  queries/useProfile.ts     # READ profile
-  commands/useUpdateProfile.ts # UPDATE profile
-  ui/ProfileForm.vue
+  model/
+    store.ts                # Profile store
+  ui/
+    ProfileForm.vue         # Profile form
 
 pages/ProfilePage/          # Profile page
-  ui/ProfilePage.vue        # Compose widgets/features
+  ui/
+    ProfilePage.vue         # Compose widgets/features
 ```
 
-### Authentication
+### Authentication (Tauri example)
 
 ```
 entities/user/              # User entity
+  model/
+    types.ts
+    store.ts
 
 features/auth/              # Authentication
-  queries/useAuthStatus.ts  # Is authenticated?
-  commands/useLogin.ts      # Login
-  commands/useLogout.ts     # Logout
-  ui/LoginForm.vue
+  api/
+    login.ts                # invoke('login')
+    logout.ts               # invoke('logout')
+    checkStatus.ts          # invoke('auth_status')
+  model/
+    store.ts                # Auth state
+  ui/
+    LoginForm.vue
 
-widgets/HeaderWidget/       # Header with user menu
-  ui/HeaderWidget.vue       # Uses features/auth
+widgets/header/             # Header with user menu
+  ui/
+    Header.vue              # Uses features/auth
 
-pages/LoginPage/            # Login page
-  ui/LoginPage.vue          # Uses features/auth
+pages/login/                # Login page
+  ui/
+    LoginPage.vue           # Uses features/auth
 ```
 
-### File Conversion
+### Theme Management (Real example from this project)
 
 ```
-entities/file/              # Files CRUD
-  queries/useFiles.ts
-  commands/useUploadFile.ts
+features/theme/             # Theme feature
+  lib/
+    types.ts                # ThemeMode, ThemeVariant
+    constants.ts            # THEME_MODES, THEME_VARIANTS
+    utils.ts                # resolveThemeVariant, getNextThemeMode
+  model/
+    store.ts                # useThemeStore()
+    persistence.ts          # localStorage wrapper
+    dom.ts                  # applyThemeToDom()
+    observers/
+      system.ts             # MediaQuery observer
+      auto-scheduler.ts     # Timer-based scheduler
+  ui/
+    ThemeToggle.vue         # Toggle button
 
-features/file-converter/    # Conversion
-  queries/useConversionStatus.ts
-  commands/useStartConversion.ts
-  ui/ConverterWidget.vue
+widgets/layout/             # Layout widget
+  ui/
+    Header.vue              # Uses ThemeToggle
 
-pages/ConverterPage/        # Converter page
-  ui/ConverterPage.vue
+app/App.vue                 # Initializes theme.init()
 ```
 
 ## When to create new slice
@@ -374,8 +570,9 @@ pages/ConverterPage/        # Converter page
 1. **Determine type:** Entity, Feature, Widget or Page?
 2. **Determine layer:** entities, features, widgets, pages?
 3. **Create structure:**
-   - Entities/Features: queries/, commands/, model/, ui/
-   - Widgets/Pages: ui/, model/
+   - Entities: api/, model/, ui/, lib/ (optional)
+   - Features: lib/, model/, ui/, api/ (optional)
+   - Widgets/Pages: ui/, model/ (optional)
 4. **Add Public API:** index.ts with exports
 5. **Check dependencies:** imports only from lower layers
-6. **Documentation:** README.md with description
+6. **Documentation:** README.md (optional)
